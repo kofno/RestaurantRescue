@@ -1,8 +1,9 @@
 import * as React from 'react';
+import AreaTitle from './../AreaTitle';
 
 const Inventory = () => {
   return (
-    <p className="title is-5">Inventory</p>
+    <AreaTitle text="Inventory" />
   );
 };
 

@@ -1,31 +1,41 @@
 import * as React from 'react';
-import { Place, LocationRef, LocationChangeFn } from './../Places';
+import { observer } from 'mobx-react';
+import Game from './../Game';
+import LocationLink from './../LocationLink';
+import AreaTitle from './../AreaTitle';
+import FadeIn from './../FadeIn';
 
 interface Props {
-  place: Place;
-  onLocationChange: LocationChangeFn;
+  game: Game;
 }
 
-const toOtherLocations = (refs: LocationRef[], cb: LocationChangeFn): JSX.Element[] =>
-  refs.map(ref => (
-    <p className="content" key={ref.id}>
-      <a href="#" onClick={() => cb(ref.id)}>
-        {ref.summary}
-      </a>
-    </p>
-  ));
+const NarrativeBody = observer(({ game }: Props) => {
+  const place = game.place;
+  return (
+    <FadeIn>
+      <div key={place.kind}>
+        <AreaTitle text={place.name} />
+        <p className="content">{place.description}</p>
 
-const Narrative = ({ place, onLocationChange }: Props) => {
+        <p className="content">
+          {place.exits.map(e => e.description).join(' ')}
+        </p>
+        <ul>
+          {place.exits.map(exit => (<li><LocationLink exit={exit} game={game} /></li>))}
+        </ul>
+      </div>
+    </FadeIn>
+  );
+});
+
+const Narrative = observer(({ game }: Props) => {
   return (
     <div>
       <p className="title is-3">Treasure Island</p>
 
-      <p className="title is-5">{place.name}</p>
-      <p className="content">{place.description}</p>
-
-      {toOtherLocations(place.refs, onLocationChange)}
+      <NarrativeBody game={game} />
     </div>
   );
-};
+});
 
 export default Narrative;

@@ -1,61 +1,30 @@
 import * as React from 'react';
+import { observer } from 'mobx-react';
 import DesktopLayout from './../DesktopLayout';
 import Narrative from './../Narrative';
-import KnownPlaces from './../KnownPlaces';
+import KnownPlaces from './../KnownPlace';
 import Inventory from './../Inventory';
-import { Place, places, lookupPlace } from './../Places';
+import Game from './../Game';
+import DevTools from 'mobx-react-devtools';
 import './App.css';
 
-interface State {
-  locations: Place[];
-  knownPlaces: Place[];
-  place: Place;
+interface Props {
+  game: Game;
 }
 
-const handleLocationChange = (app: App) => (kind: string): void => {
-  const updateLocation = (prevState: State, props: {}) => {
-    const place = lookupPlace(kind, prevState.locations).getOrElse(prevState.place);
-    const knownPlaces = lookupPlace(kind, prevState.knownPlaces).cata({
-      Nothing: () => prevState.knownPlaces.concat([place]),
-      Just: (_) => prevState.knownPlaces
-    });
-    return {
-      knownPlaces,
-      place
-    };
-  };
-  app.setState(updateLocation);
-};
-
-class App extends React.Component<{}, State> {
-
-  constructor(props: {}) {
-    super(props);
-    const kitchen = places[0];
-    this.state = {
-      locations: places,
-      knownPlaces: [kitchen],
-      place: kitchen,
-    };
-  }
-
+@observer
+class App extends React.Component<Props, {}> {
   render() {
+    const game = this.props.game;
     return (
-      <DesktopLayout
-        narrative={(
-          <Narrative
-            place={this.state.place}
-            onLocationChange={handleLocationChange(this)}
-          />
-        )}
-        places={(
-          <KnownPlaces
-            knownPlaces={this.state.knownPlaces}
-            onLocationChange={handleLocationChange(this)}
-          />
-        )}
-        inventory={<Inventory />}
-      />
+      <div>
+        <DesktopLayout
+          narrative={<Narrative game={game} />}
+          places={(<KnownPlaces game={game} />)}
+          inventory={<Inventory />}
+        />
+        {process.env.NODE_ENV === 'development' && <DevTools />}
+      </div>
     );
   }
 }
