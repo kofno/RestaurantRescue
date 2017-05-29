@@ -4,6 +4,8 @@ import Game from './../Game';
 import LocationLink from './../LocationLink';
 import AreaTitle from './../AreaTitle';
 import FadeIn from './../FadeIn';
+import * as Thing from './../Thing';
+import ThingView from './ThingView';
 
 interface Props {
   game: Game;
@@ -16,6 +18,10 @@ const NarrativeBody = observer(({ game }: Props) => {
       <div key={place.kind}>
         <AreaTitle text={place.name} />
         <p className="content">{place.description}</p>
+
+        {game.things.filter(Thing.locatedIn(place.kind))
+          .map(t => <ThingView thing={t} game={game} />)
+        }
 
         <p className="content">
           {place.exits.map(e => e.description).join(' ')}

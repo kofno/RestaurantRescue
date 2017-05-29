@@ -58,8 +58,8 @@ export const places: Place[] = [
     + 'but now is best described as _mostly lit_.',
     exits: [
       { kind: 'kitchen', description: 'Double doors to the north lead to the kitchen.' },
-      { kind: 'reception', description: 'The reception area is south of here.' },
       { kind: 'garden', description: 'A door to the east leads outside to the garden' },
+      { kind: 'reception', description: 'The reception area is south of here.' },
     ],
   },
   {
@@ -76,7 +76,7 @@ export const places: Place[] = [
     kind: 'reception',
     name: 'Empty Reception Area',
     description: 'You are standing in the reception area. This is where customers are '
-    + 'greeted before being taken to their tables. The resturaunt is closed, so this are is '
+    + 'greeted before being taken to their tables. The resturaunt is closed, so this area is '
     + 'empty.',
     exits: [
       { kind: 'dining-room', description: 'A hallway to the east leads back into the dining room.' },
