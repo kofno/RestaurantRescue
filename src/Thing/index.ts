@@ -56,6 +56,11 @@ export const initialThings = [
     description: 'No customers will come until the front doors are unlocked.',
   },
   {
+    kind: 'doors-unlocked',
+    placeId: undefined,
+    description: 'The doors are unlocked.',
+  },
+  {
     kind: 'seasonings-pantry',
     placeId: 'pantry',
     description: 'Garlic and Italian seasonings are here.',

@@ -4,6 +4,7 @@ import DesktopLayout from './../DesktopLayout';
 import Narrative from './../Narrative';
 import KnownPlaces from './../KnownPlace';
 import Inventory from './../Inventory';
+import ConsoleArea from './../ConsoleArea';
 import Game from './../Game';
 import DevTools from 'mobx-react-devtools';
 import './App.css';
@@ -21,8 +22,10 @@ class App extends React.Component<Props, {}> {
         <DesktopLayout
           narrative={<Narrative game={game} />}
           places={(<KnownPlaces game={game} />)}
-          inventory={<Inventory />}
+          inventory={<Inventory game={game} />}
         />
+
+        <ConsoleArea game={game} />
         {process.env.NODE_ENV === 'development' && <DevTools />}
       </div>
     );
