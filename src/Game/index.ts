@@ -1,94 +1,120 @@
-import { observable, action } from 'mobx';
-import { Maybe, nothing, just } from 'maybeasy';
-import { Exit, places, lookupPlace } from './../Place';
-import { Place } from './../Place';
-import * as Thing from './../Thing';
+import { observable, computed, action } from 'mobx';
+import Place from './../Place';
+import Places from './../Places';
+import { Thing } from './../Thing';
+import { Interaction } from './../Interaction';
 import ConsoleMessage from './../ConsoleMessage';
-import * as Interaction from './../Interaction';
 
-const assertNever = (n: never): never => {
-  throw new Error(`Type Error; This code should never be reached: ${n}`);
+const assertNever = (x: never): never => {
+  throw new Error(`Unexpected switch fall through: ${x}`);
 };
 
 class Game {
 
-  @observable place: Place = places[0];
+  @observable places: Place[] = Places.build();
 
-  @observable knownPlaces: Place[] = [places[0]];
+  @observable place?: Place = this.places[0];
 
-  @observable things: Thing.Thing[] = Thing.initialThings;
+  @observable inventory: Thing[] = [];
 
-  @observable consoleMessage: Maybe<ConsoleMessage> = nothing();
+  @observable consoleMessage?: ConsoleMessage;
 
-  readonly interactions: Interaction.Interaction[] = Interaction.interactions;
+  @computed get knownPlaces(): Place[] {
+    return this.places.filter(p => p.known);
+  }
 
-  @action exitTo(exit: Exit) {
-    const newPlace = lookupPlace(exit.kind, places).getOrElse(this.place);
-    this.changeLocation(newPlace);
+  @action moveTo(place: Place) {
+    this.place = place;
+    place.known = true;
   };
 
-  @action changeLocation(place: Place) {
-    this.place = place;
-    this.updateKnownPlaces(place);
-  }
-
-  @action updateKnownPlaces(place: Place) {
-    if (this.knownPlaces.every(p => p.kind !== place.kind)) {
-      this.knownPlaces.push(place);
-    }
-  }
-
-  @action interact(i: Interaction.Interaction) {
+  @action sendConsoleMessage(m: ConsoleMessage) {
     this.clearConsole();
-    switch (i.kind) {
-      case 'examine':
-        setTimeout(() => this.setConsoleMessage(just(i.message)), 500);
-        break;
-
-      case 'take':
-        this.removeThing(i.thingId);
-        this.placeThing(i.inventoryId, '--inventory--');
-        setTimeout(() => this.setConsoleMessage(just(i.message)), 500);
-        break;
-
-      case 'combine':
-        const target = this.things.find(t => i.targetId === t.kind && (i.targetPlace || this.place.kind) === t.placeId);
-        const thing = this.things.find(t => i.thingId === t.kind && i.thingPlace === t.placeId);
-        if (thing && target) {
-          setTimeout(() => this.setConsoleMessage(just(i.message)), 500);
-          this.removeThing(target.kind);
-          this.removeThing(thing.kind);
-          this.placeThing(i.resultId, i.resultPlace);
-        } else {
-          setTimeout(() => this.setConsoleMessage(just(i.failureMessage)), 500);
-        }
-        break;
-
-      default: assertNever(i);
-    }
+    setTimeout(() => this.setConsoleMessage(m), 500);
   }
 
   @action clearConsole() {
-    this.consoleMessage = nothing();
+    this.consoleMessage = undefined;
   }
 
-  @action setConsoleMessage(m: Maybe<ConsoleMessage>) {
+  @action setConsoleMessage(m: ConsoleMessage): void {
     this.consoleMessage = m;
   }
 
-  @action removeThing(thingId: string) {
-    const thing = this.things.find(t => t.kind === thingId);
-    if (thing) {
-      thing.placeId = undefined;
+  @action removeFromPlace(aKind: string, place: Place): void {
+    place.things = place.things.filter(f => f.kind !== aKind);
+  }
+
+  @action removeFromInventory(aKind: string): void {
+    this.inventory = this.inventory.filter(f => f.kind !== aKind);
+  }
+
+  @action removeFromWorld(aKind: string): void {
+    for (const p of this.places) {
+      this.removeFromPlace(aKind, p);
+    }
+  }
+
+  @action interact(interaction: Interaction): void {
+    switch (interaction.kind) {
+      case 'examine':
+        this.sendConsoleMessage(interaction.message);
+        break;
+
+      case 'take':
+        if (this.thingIsInPlace(interaction.fromPlace)) {
+          this.sendConsoleMessage(interaction.message);
+          this.inventory.push(interaction.toInventory);
+          if (this.place) {
+            this.removeFromPlace(interaction.fromPlace, this.place);
+          }
+        }
+        break;
+
+      case 'combine-in-place':
+        if (this.thingIsInPlace(interaction.fromPlace) && this.thingIsInInventory(interaction.fromInventory)) {
+          this.sendConsoleMessage(interaction.message);
+          this.removeFromInventory(interaction.fromInventory);
+          if (this.place) {
+            this.removeFromPlace(interaction.fromPlace, this.place);
+            this.place.things.push(interaction.toPlace);
+          }
+        } else {
+          this.sendConsoleMessage(interaction.failMessage);
+        }
+        break;
+
+      case 'combine-in-world':
+        if (this.thingIsInPlace(interaction.replaceThing) && this.thingIsInWorld(interaction.destroyThing)) {
+          this.sendConsoleMessage(interaction.message);
+          this.removeFromWorld(interaction.destroyThing);
+          if (this.place) {
+            this.removeFromPlace(interaction.replaceThing, this.place);
+            this.place.things.push(interaction.toPlace);
+          }
+        } else {
+          this.sendConsoleMessage(interaction.failMessage);
+        }
+        break;
+
+      default:
+        assertNever(interaction);
     }
   };
 
-  @action placeThing(thingId: string, where: string) {
-    const thing = this.things.find(t => t.kind === thingId);
-    if (thing) {
-      thing.placeId = where;
-    }
+  thingIsInPlace(aKind: string): boolean {
+    if (typeof this.place === 'undefined') { return false; }
+    return this.place.things.some(t => t.kind === aKind);
   }
+
+  thingIsInInventory(aKind: string): boolean {
+    return this.inventory.some(t => t.kind === aKind);
+  }
+
+  thingIsInWorld(aKind: string): boolean {
+    return this.places.some(p => p.things.some(t => t.kind === aKind));
+  }
+
 }
 
 export default Game;

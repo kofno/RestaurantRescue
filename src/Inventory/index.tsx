@@ -2,20 +2,9 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import AreaTitle from './../AreaTitle';
 import { Thing } from './../Thing';
-import Game from './../Game';
 import { Interaction } from './../Interaction';
+import Game from './../Game';
 import ULAppear from './../ULAppear';
-
-export const inventoryPlaceId = '--inventory--';
-
-const isInventory = (t: Thing): boolean =>
-  t.placeId === inventoryPlaceId;
-
-const handleInventoryClick = (game: Game, interaction: Interaction) =>
-  (e: React.SyntheticEvent<HTMLElement>): void => {
-    e.preventDefault();
-    game.interact(interaction);
-  };
 
 interface Props {
   game: Game;
@@ -26,21 +15,27 @@ interface InventoryLinkProps {
   game: Game;
 }
 
+const getInteraction = (thing: Thing): Interaction | undefined => {
+  if (thing.interactions.length === 0) {
+    return;
+  }
+  return thing.interactions[0];
+};
+
 const InventoryLink = observer(({ thing, game }: InventoryLinkProps): JSX.Element => {
-  const interaction = game.interactions.find(i => i.thingId === thing.kind);
+  const i = getInteraction(thing);
   return (
     <li>
-      {interaction && (
-        <a href="#" onClick={handleInventoryClick(game, interaction)}>
-          {thing.description}
-        </a>
-      )}
+      {typeof i === 'undefined'
+        ? thing.description
+        : <a href="#" onClick={() => game.interact(i)}>{thing.description}</a>
+      }
     </li>
   );
 });
 
 const Inventory = observer(({ game }: Props): JSX.Element => {
-  const inventory = game.things.filter(isInventory);
+  const inventory = game.inventory;
   return (
     <div>
       <AreaTitle text="Inventory" />

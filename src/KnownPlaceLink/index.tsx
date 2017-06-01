@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import Game from './../Game';
-import { Place } from './../Place';
+import Place from './../Place';
 
 interface KnownPlaceProps {
   place: Place;
@@ -9,7 +9,7 @@ interface KnownPlaceProps {
 }
 
 const handlePlaceClick = (place: Place, game: Game) => () =>
-  game.changeLocation(place);
+  game.moveTo(place);
 
 const KnownPlaceLink = observer(({ place, game }: KnownPlaceProps) => {
   return (

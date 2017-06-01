@@ -57,10 +57,10 @@ interface ConsoleProps {
 const ConsoleArea = observer(({ game }: ConsoleProps): JSX.Element => {
   return (
     <SlideUp>
-      {game.consoleMessage.cata({
-        Nothing: () => <div key="nothing" className="ConsoleArea" />,
-        Just: (m) => <Message message={m} game={game} />,
-      })}
+      {typeof game.consoleMessage === 'undefined'
+        ? <div key="nothing" className="ConsoleArea" />
+        : <Message message={game.consoleMessage} game={game} />
+      }
     </SlideUp>
   );
 });

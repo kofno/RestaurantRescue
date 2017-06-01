@@ -1,27 +1,29 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import Game from './../Game';
+import GameTitle from './../GameTitle';
 import LocationLink from './../LocationLink';
 import AreaTitle from './../AreaTitle';
 import FadeIn from './../FadeIn';
-import * as Thing from './../Thing';
 import ThingView from './ThingView';
+import Place from './../Place';
 
 interface Props {
   game: Game;
 }
 
-const NarrativeBody = observer(({ game }: Props) => {
-  const place = game.place;
+interface OtherProps extends Props {
+  place: Place;
+}
+
+const NarrativeBody = observer(({ place, game }: OtherProps) => {
   return (
     <FadeIn>
       <div key={place.kind}>
         <AreaTitle text={place.name} />
         <p className="content">{place.description}</p>
 
-        {game.things.filter(Thing.locatedIn(place.kind))
-          .map(t => <ThingView thing={t} game={game} />)
-        }
+        {place.things.map(t => <ThingView thing={t} game={game} />)}
 
         <p className="content">
           {place.exits.map(e => e.description).join(' ')}
@@ -37,9 +39,8 @@ const NarrativeBody = observer(({ game }: Props) => {
 const Narrative = observer(({ game }: Props) => {
   return (
     <div>
-      <p className="title is-3">Treasure Island</p>
-
-      <NarrativeBody game={game} />
+      <GameTitle game={game} />
+      {game.place && <NarrativeBody place={game.place} game={game} />}
     </div>
   );
 });
