@@ -9,14 +9,11 @@ import ThingView from './ThingView';
 import Place from './../Place';
 
 interface Props {
+  place: Place;
   game: Game;
 }
 
-interface OtherProps extends Props {
-  place: Place;
-}
-
-const NarrativeBody = observer(({ place, game }: OtherProps) => {
+const NarrativeBody = observer(({ place, game }: Props) => {
   return (
     <FadeIn>
       <div key={place.kind}>
@@ -36,11 +33,11 @@ const NarrativeBody = observer(({ place, game }: OtherProps) => {
   );
 });
 
-const Narrative = observer(({ game }: Props) => {
+const Narrative = observer(({ game, place }: Props) => {
   return (
     <div>
       <GameTitle game={game} />
-      {game.place && <NarrativeBody place={game.place} game={game} />}
+      <NarrativeBody place={place} game={game} />
     </div>
   );
 });

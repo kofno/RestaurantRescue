@@ -23,7 +23,7 @@ const InteractionButton = observer(({ onClick, label }: ButtonProps): JSX.Elemen
 
 const ThingView = observer(({ thing, game }: Props): JSX.Element => {
   return (
-    <p className="content">
+    <p key={thing.kind} className="content">
       {thing.description}<br />
 
       {thing.interactions.map(i =>

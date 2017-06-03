@@ -1,9 +1,10 @@
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, reaction } from 'mobx';
 import Place from './../Place';
 import Places from './../Places';
-import { Thing } from './../Thing';
+import { Thing, ThingKind } from './../Thing';
 import { Interaction } from './../Interaction';
 import ConsoleMessage from './../ConsoleMessage';
+import { GameStatus, play, endGame } from './../GameStatus';
 
 const assertNever = (x: never): never => {
   throw new Error(`Unexpected switch fall through: ${x}`);
@@ -13,18 +14,23 @@ class Game {
 
   @observable places: Place[] = Places.build();
 
-  @observable place?: Place = this.places[0];
+  @observable gameStatus: GameStatus = { kind: 'start' };
 
   @observable inventory: Thing[] = [];
 
   @observable consoleMessage?: ConsoleMessage;
+
+  checkEndGame = reaction(
+    () => this.places.some(p => p.things.some(t => t.kind === 'doors-unlocked')),
+    (gameOver: boolean) => this.gameStatus = endGame()
+  );
 
   @computed get knownPlaces(): Place[] {
     return this.places.filter(p => p.known);
   }
 
   @action moveTo(place: Place) {
-    this.place = place;
+    this.gameStatus = play(place);
     place.known = true;
   };
 
@@ -56,6 +62,7 @@ class Game {
   }
 
   @action interact(interaction: Interaction): void {
+    if (this.gameStatus.kind !== 'play') { return; }
     switch (interaction.kind) {
       case 'examine':
         this.sendConsoleMessage(interaction.message);
@@ -65,33 +72,31 @@ class Game {
         if (this.thingIsInPlace(interaction.fromPlace)) {
           this.sendConsoleMessage(interaction.message);
           this.inventory.push(interaction.toInventory);
-          if (this.place) {
-            this.removeFromPlace(interaction.fromPlace, this.place);
-          }
+          this.removeFromPlace(interaction.fromPlace, this.gameStatus.place);
         }
         break;
 
       case 'combine-in-place':
-        if (this.thingIsInPlace(interaction.fromPlace) && this.thingIsInInventory(interaction.fromInventory)) {
+        if (this.thingIsInPlace(interaction.fromPlace)
+          && this.thingIsInInventory(interaction.fromInventory)) {
+          const place = this.gameStatus.place;
           this.sendConsoleMessage(interaction.message);
           this.removeFromInventory(interaction.fromInventory);
-          if (this.place) {
-            this.removeFromPlace(interaction.fromPlace, this.place);
-            this.place.things.push(interaction.toPlace);
-          }
+          this.removeFromPlace(interaction.fromPlace, place);
+          place.things.push(interaction.toPlace);
         } else {
           this.sendConsoleMessage(interaction.failMessage);
         }
         break;
 
       case 'combine-in-world':
-        if (this.thingIsInPlace(interaction.replaceThing) && this.thingIsInWorld(interaction.destroyThing)) {
+        if (this.thingIsInPlace(interaction.replaceThing)
+          && this.thingIsInWorld(interaction.destroyThing)) {
+          const place = this.gameStatus.place;
           this.sendConsoleMessage(interaction.message);
           this.removeFromWorld(interaction.destroyThing);
-          if (this.place) {
-            this.removeFromPlace(interaction.replaceThing, this.place);
-            this.place.things.push(interaction.toPlace);
-          }
+          this.removeFromPlace(interaction.replaceThing, place);
+          place.things.push(interaction.toPlace);
         } else {
           this.sendConsoleMessage(interaction.failMessage);
         }
@@ -102,16 +107,35 @@ class Game {
     }
   };
 
-  thingIsInPlace(aKind: string): boolean {
-    if (typeof this.place === 'undefined') { return false; }
-    return this.place.things.some(t => t.kind === aKind);
+  @action resetGame() {
+    this.resetInventory();
+    this.resetPlaces();
+    this.startGame();
+    this.clearConsole();
+  };
+
+  @action resetPlaces() {
+    this.places = Places.build();
   }
 
-  thingIsInInventory(aKind: string): boolean {
+  @action resetInventory() {
+    this.inventory = [];
+  }
+
+  @action startGame() {
+    this.gameStatus = { kind: 'start' };
+  }
+
+  thingIsInPlace(aKind: ThingKind): boolean {
+    if (this.gameStatus.kind !== 'play') { return false; }
+    return this.gameStatus.place.things.some(t => t.kind === aKind);
+  }
+
+  thingIsInInventory(aKind: ThingKind): boolean {
     return this.inventory.some(t => t.kind === aKind);
   }
 
-  thingIsInWorld(aKind: string): boolean {
+  thingIsInWorld(aKind: ThingKind): boolean {
     return this.places.some(p => p.things.some(t => t.kind === aKind));
   }
 
