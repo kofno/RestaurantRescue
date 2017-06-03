@@ -108,9 +108,11 @@ class Game {
   };
 
   @action resetGame() {
-    this.resetInventory();
-    this.resetPlaces();
-    this.startGame();
+    setTimeout(() => {
+      this.resetInventory();
+      this.resetPlaces();
+      this.startGame();
+    }, 1000);
     this.clearConsole();
   };
 
