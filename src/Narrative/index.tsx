@@ -6,38 +6,49 @@ import LocationLink from './../LocationLink';
 import AreaTitle from './../AreaTitle';
 import FadeIn from './../FadeIn';
 import ThingView from './ThingView';
-import Place from './../Place';
+import { ThingLocation } from './../Thing';
+import { name, description, exits } from './../Place';
+import * as R from 'ramda';
 
 interface Props {
-  place: Place;
   game: Game;
 }
 
-const NarrativeBody = observer(({ place, game }: Props) => {
+const NarrativeBody = observer(({ game }: Props): JSX.Element => {
+  const place = game.place;
+  const thingsHere = R.filter((tl: ThingLocation) => place === tl.place);
+  const renderThing = (t: ThingLocation) =>
+    <ThingView key={t.thing} thing={t.thing} game={game} />;
+
+  if (!place) { return <span />; }
   return (
     <FadeIn>
-      <div key={place.kind}>
-        <AreaTitle text={place.name} />
-        <p className="content">{place.description}</p>
+      <div key={place}>
+        <AreaTitle text={name(place)} />
+        <p className="content">{description(place)}</p>
 
-        {place.things.map(t => <ThingView thing={t} game={game} />)}
+        {thingsHere(game.things).map(renderThing)}
 
         <p className="content">
-          {place.exits.map(e => e.description).join(' ')}
+          {exits(place).map(e => e.description).join(' ')}
         </p>
         <ul>
-          {place.exits.map(exit => (<li><LocationLink exit={exit} game={game} /></li>))}
+          {exits(place).map(e => (
+            <li key={e.place}>
+              <LocationLink exit={e} game={game} />
+            </li>
+          ))}
         </ul>
       </div>
     </FadeIn>
   );
 });
 
-const Narrative = observer(({ game, place }: Props) => {
+const Narrative = observer(({ game }: Props) => {
   return (
     <div>
       <GameTitle game={game} />
-      <NarrativeBody place={place} game={game} />
+      <NarrativeBody game={game} />
     </div>
   );
 });

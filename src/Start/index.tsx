@@ -8,7 +8,7 @@ interface Props {
 }
 
 const handleStartGame = ((game: Game) => (): void => {
-  game.moveTo(game.places[0]);
+  game.moveTo('kitchen');
 });
 
 const Start = observer(({ game }: Props): JSX.Element => {
@@ -16,9 +16,9 @@ const Start = observer(({ game }: Props): JSX.Element => {
     <div className="section">
       <div className="column is-half is-offset-one-quarter box">
         <nav className="level">
-          <p className="level-item has-text-centered">
+          <div className="level-item has-text-centered">
             <GameTitle game={game} />
-          </p>
+          </div>
         </nav>
 
         <p className="content">

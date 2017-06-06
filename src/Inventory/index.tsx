@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import AreaTitle from './../AreaTitle';
-import { Thing } from './../Thing';
-import { Interaction } from './../Interaction';
+import { ThingKind, description } from './../Thing';
+import { Interaction, interactions, interact } from './../Interactions';
 import Game from './../Game';
 import ULAppear from './../ULAppear';
 
@@ -11,15 +11,15 @@ interface Props {
 }
 
 interface InventoryLinkProps {
-  thing: Thing;
+  thing: ThingKind;
   game: Game;
 }
 
-const getInteraction = (thing: Thing): Interaction | undefined => {
-  if (thing.interactions.length === 0) {
+const getInteraction = (thing: ThingKind): Interaction | undefined => {
+  if (interactions(thing).length === 0) {
     return;
   }
-  return thing.interactions[0];
+  return interactions(thing)[0];
 };
 
 const InventoryLink = observer(({ thing, game }: InventoryLinkProps): JSX.Element => {
@@ -27,20 +27,20 @@ const InventoryLink = observer(({ thing, game }: InventoryLinkProps): JSX.Elemen
   return (
     <li>
       {typeof i === 'undefined'
-        ? thing.description
-        : <a href="#" onClick={() => game.interact(i)}>{thing.description}</a>
+        ? description(thing)
+        : <a href="#" onClick={() => interact(game, i)}>{description(thing)}</a>
       }
     </li>
   );
 });
 
 const Inventory = observer(({ game }: Props): JSX.Element => {
-  const inventory = game.inventory;
+  const inventory = game.things.filter(t => t.place === 'inventory');
   return (
     <div>
       <AreaTitle text="Inventory" />
       <ULAppear>
-        {inventory.map(i => <InventoryLink thing={i} game={game} />)}
+        {inventory.map(i => <InventoryLink key={i.thing} thing={i.thing} game={game} />)}
       </ULAppear>
     </div>
   );

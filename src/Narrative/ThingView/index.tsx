@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { Thing } from './../../Thing';
+import { ThingKind, description } from './../../Thing';
+import { interactions, label, interact } from './../../Interactions';
 import Game from './../../Game';
 
 interface Props {
-  thing: Thing;
+  thing: ThingKind;
   game: Game;
 }
 
@@ -23,11 +24,11 @@ const InteractionButton = observer(({ onClick, label }: ButtonProps): JSX.Elemen
 
 const ThingView = observer(({ thing, game }: Props): JSX.Element => {
   return (
-    <p key={thing.kind} className="content">
-      {thing.description}<br />
+    <p className="content">
+      {description(thing)}<br />
 
-      {thing.interactions.map(i =>
-        <InteractionButton label={i.label} onClick={() => game.interact(i)} />)
+      {interactions(thing).map(i =>
+        <InteractionButton label={label(i)} onClick={() => interact(game, i)} />)
       }
 
     </p>

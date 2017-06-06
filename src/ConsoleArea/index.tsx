@@ -5,9 +5,6 @@ import ConsoleMessage from './../ConsoleMessage';
 import SlideUp from './../SlideUp';
 import './ConsoleArea.css';
 
-const handleCloseConsole = (game: Game) => (): void =>
-  game.clearConsole();
-
 interface HeaderProps {
   title: string;
   game: Game;
@@ -17,7 +14,7 @@ const Header = observer(({ title, game }: HeaderProps): JSX.Element => {
   return (
     <div className="message-header">
       {title}
-      <button className="delete" onClick={handleCloseConsole(game)} />
+      <button className="delete" onClick={() => game.closeConsole()} />
     </div>
   );
 });
@@ -57,9 +54,9 @@ interface ConsoleProps {
 const ConsoleArea = observer(({ game }: ConsoleProps): JSX.Element => {
   return (
     <SlideUp>
-      {typeof game.consoleMessage === 'undefined'
+      {typeof game.message === 'undefined'
         ? <div key="nothing" className="ConsoleArea" />
-        : <Message message={game.consoleMessage} game={game} />
+        : <Message key={game.message.title} message={game.message} game={game} />
       }
     </SlideUp>
   );

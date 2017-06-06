@@ -1,143 +1,124 @@
-import { observable, computed, action, reaction } from 'mobx';
-import Place from './../Place';
-import Places from './../Places';
-import { Thing, ThingKind } from './../Thing';
-import { Interaction } from './../Interaction';
+import { observable, action, computed } from 'mobx';
+import { PlaceType } from './../Place';
+import { ThingKind, ThingLocation, ThingStore, initialState } from './../Thing';
 import ConsoleMessage from './../ConsoleMessage';
-import { GameStatus, play, endGame } from './../GameStatus';
+import * as R from 'ramda';
 
-const assertNever = (x: never): never => {
-  throw new Error(`Unexpected switch fall through: ${x}`);
-};
+const thingInLocation = (it: ThingKind, at: ThingStore) =>
+  (tl: ThingLocation): boolean => tl.place === at && tl.thing === it;
+
+type GameStatus
+  = 'start'
+  | 'play'
+  | 'end'
+  ;
 
 class Game {
+  @observable knownPlaces: PlaceType[] = [];
+  @observable place?: PlaceType = undefined;
+  @observable things: ThingLocation[] = initialState();
+  @observable message?: ConsoleMessage = undefined;
 
-  @observable places: Place[] = Places.build();
-
-  @observable gameStatus: GameStatus = { kind: 'start' };
-
-  @observable inventory: Thing[] = [];
-
-  @observable consoleMessage?: ConsoleMessage;
-
-  checkEndGame = reaction(
-    () => this.places.some(p => p.things.some(t => t.kind === 'doors-unlocked')),
-    (gameOver: boolean) => this.gameStatus = endGame()
-  );
-
-  @computed get knownPlaces(): Place[] {
-    return this.places.filter(p => p.known);
+  @computed get gameStatus(): GameStatus {
+    const gameOver = thingInLocation('doors-unlocked', 'reception');
+    if (R.any(gameOver, this.things)) {
+      return 'end';
+    }
+    if (!this.place) {
+      return 'start';
+    }
+    return 'play';
   }
 
-  @action moveTo(place: Place) {
-    this.gameStatus = play(place);
-    place.known = true;
+  @action moveTo(place: PlaceType) {
+    this.place = place;
+    if (!R.contains(place, this.knownPlaces)) {
+      this.knownPlaces.push(place);
+    }
   };
 
+  @action closeConsole() {
+    this.message = undefined;
+  }
+
   @action sendConsoleMessage(m: ConsoleMessage) {
-    this.clearConsole();
-    setTimeout(() => this.setConsoleMessage(m), 500);
+    this.message = undefined;
+    setTimeout(action(() => this.message = m), 500);
   }
 
-  @action clearConsole() {
-    this.consoleMessage = undefined;
+  @action removeThing(aThing: ThingKind) {
+    const remover = (t: ThingLocation) =>
+      aThing === t.thing ? { ...t, place: undefined } : t;
+    this.things = this.things.map(remover);
   }
 
-  @action setConsoleMessage(m: ConsoleMessage): void {
-    this.consoleMessage = m;
+  @action putThing(aThing: ThingKind, aPlace: ThingStore) {
+    const placer = (t: ThingLocation) =>
+      aThing === t.thing ? { ...t, place: aPlace } : t;
+    this.things = this.things.map(placer);
   }
 
-  @action removeFromPlace(aKind: string, place: Place): void {
-    place.things = place.things.filter(f => f.kind !== aKind);
+  @action examine(message: ConsoleMessage) {
+    this.sendConsoleMessage(message);
   }
 
-  @action removeFromInventory(aKind: string): void {
-    this.inventory = this.inventory.filter(f => f.kind !== aKind);
-  }
-
-  @action removeFromWorld(aKind: string): void {
-    for (const p of this.places) {
-      this.removeFromPlace(aKind, p);
+  @action take(taken: ThingKind, inventory: ThingKind, message: ConsoleMessage) {
+    if (!this.place) { return; }
+    const thingHere = thingInLocation(taken, this.place);
+    if (this.things.some(thingHere)) {
+      this.putThing(inventory, 'inventory');
+      this.removeThing(taken);
+      this.sendConsoleMessage(message);
     }
   }
 
-  @action interact(interaction: Interaction): void {
-    if (this.gameStatus.kind !== 'play') { return; }
-    switch (interaction.kind) {
-      case 'examine':
-        this.sendConsoleMessage(interaction.message);
-        break;
+  @action use(
+    actor: ThingKind,
+    target: ThingKind,
+    result: ThingKind,
+    succeed: ConsoleMessage,
+    fail: ConsoleMessage
+  ) {
+    if (!this.place) { return; }
+    const thingHere = thingInLocation(target, this.place);
+    const holding = thingInLocation(actor, 'inventory');
+    if (R.any(thingHere, this.things) && R.any(holding, this.things)) {
+      this.removeThing(actor);
+      this.removeThing(target);
+      this.putThing(result, this.place);
+      this.sendConsoleMessage(succeed);
+    } else {
+      this.sendConsoleMessage(fail);
+    }
+  }
 
-      case 'take':
-        if (this.thingIsInPlace(interaction.fromPlace)) {
-          this.sendConsoleMessage(interaction.message);
-          this.inventory.push(interaction.toInventory);
-          this.removeFromPlace(interaction.fromPlace, this.gameStatus.place);
-        }
-        break;
-
-      case 'combine-in-place':
-        if (this.thingIsInPlace(interaction.fromPlace)
-          && this.thingIsInInventory(interaction.fromInventory)) {
-          const place = this.gameStatus.place;
-          this.sendConsoleMessage(interaction.message);
-          this.removeFromInventory(interaction.fromInventory);
-          this.removeFromPlace(interaction.fromPlace, place);
-          place.things.push(interaction.toPlace);
-        } else {
-          this.sendConsoleMessage(interaction.failMessage);
-        }
-        break;
-
-      case 'combine-in-world':
-        if (this.thingIsInPlace(interaction.replaceThing)
-          && this.thingIsInWorld(interaction.destroyThing)) {
-          const place = this.gameStatus.place;
-          this.sendConsoleMessage(interaction.message);
-          this.removeFromWorld(interaction.destroyThing);
-          this.removeFromPlace(interaction.replaceThing, place);
-          place.things.push(interaction.toPlace);
-        } else {
-          this.sendConsoleMessage(interaction.failMessage);
-        }
-        break;
-
-      default:
-        assertNever(interaction);
+  @action summon(
+    actor: ThingKind,
+    target: ThingKind,
+    result: ThingKind,
+    succeed: ConsoleMessage,
+    fail: ConsoleMessage,
+  ) {
+    if (!this.place) { return; }
+    const thingHere = thingInLocation(target, this.place);
+    const exists = (tl: ThingLocation) =>
+      tl.thing === actor && typeof tl.place !== 'undefined';
+    if (R.any(thingHere, this.things) && R.any(exists, this.things)) {
+      this.removeThing(actor);
+      this.removeThing(target);
+      this.putThing(result, this.place);
+      this.sendConsoleMessage(succeed);
+    } else {
+      this.sendConsoleMessage(fail);
     }
   };
 
   @action resetGame() {
-    this.resetInventory();
-    this.resetPlaces();
-    this.startGame();
-    this.clearConsole();
+    this.knownPlaces = [];
+    this.place = undefined;
+    this.things = initialState();
+    this.message = undefined;
   };
-
-  @action resetPlaces() {
-    this.places = Places.build();
-  }
-
-  @action resetInventory() {
-    this.inventory = [];
-  }
-
-  @action startGame() {
-    this.gameStatus = { kind: 'start' };
-  }
-
-  thingIsInPlace(aKind: ThingKind): boolean {
-    if (this.gameStatus.kind !== 'play') { return false; }
-    return this.gameStatus.place.things.some(t => t.kind === aKind);
-  }
-
-  thingIsInInventory(aKind: ThingKind): boolean {
-    return this.inventory.some(t => t.kind === aKind);
-  }
-
-  thingIsInWorld(aKind: ThingKind): boolean {
-    return this.places.some(p => p.things.some(t => t.kind === aKind));
-  }
 
 }
 

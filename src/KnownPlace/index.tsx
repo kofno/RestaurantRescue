@@ -13,7 +13,7 @@ const KnownPlacesList = observer(({ game }: Props) => {
   const knownPlaces = game.knownPlaces;
   return (
     <ULAppear>
-      {knownPlaces.map(p => <KnownPlaceLink place={p} game={game} />)}
+      {knownPlaces.map(p => <KnownPlaceLink key={p} place={p} game={game} />)}
     </ULAppear>
   );
 });

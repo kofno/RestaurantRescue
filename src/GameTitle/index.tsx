@@ -9,7 +9,7 @@ interface Props {
 
 const GameTitle = observer(({ game, title }: Props): JSX.Element => {
   const text = title || 'Restaurant Rescue';
-  return <p className="title is-3">{text}</p>;
+  return <div className="title is-3">{text}</div>;
 });
 
 export default GameTitle;

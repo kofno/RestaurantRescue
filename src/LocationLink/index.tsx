@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import Exit from './../Exit';
+import { Exit, name } from './../Place';
 import Game from './../Game';
 
 interface Props {
@@ -13,9 +13,9 @@ const handleClick = (game: Game, exit: Exit) => (): void =>
 
 const LocationLink = observer(({ exit, game }: Props) => {
   return (
-    <p className="content" key={exit.place.kind}>
+    <p className="content">
       <a href="#" onClick={handleClick(game, exit)}>
-        {exit.place.name}
+        {name(exit.place)}
       </a>
     </p>
   );

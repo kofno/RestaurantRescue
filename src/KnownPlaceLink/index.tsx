@@ -1,21 +1,18 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import Game from './../Game';
-import Place from './../Place';
+import { PlaceType, name } from './../Place';
 
 interface KnownPlaceProps {
-  place: Place;
+  place: PlaceType;
   game: Game;
 }
 
-const handlePlaceClick = (place: Place, game: Game) => () =>
-  game.moveTo(place);
-
 const KnownPlaceLink = observer(({ place, game }: KnownPlaceProps) => {
   return (
-    <li key={place.kind}>
-      <a href="#" onClick={handlePlaceClick(place, game)}>
-        {place.name}
+    <li key={place}>
+      <a href="#" onClick={() => game.moveTo(place)}>
+        {name(place)}
       </a>
     </li>
   );

@@ -16,10 +16,7 @@ interface Props {
 }
 
 const GameView = observer(({ game }: Props): JSX.Element => {
-  switch (game.gameStatus.kind) {
-    case 'loading':
-      return <div>Loading...</div>;
-
+  switch (game.gameStatus) {
     case 'start':
       return <Start game={game} />;
 
@@ -27,10 +24,9 @@ const GameView = observer(({ game }: Props): JSX.Element => {
       return <End game={game} />;
 
     case 'play':
-      const place = game.gameStatus.place;
       return (
         <DesktopLayout
-          narrative={<Narrative game={game} place={place} />}
+          narrative={<Narrative game={game} />}
           places={<KnownPlaces game={game} />}
           inventory={<Inventory game={game} />}
         />
