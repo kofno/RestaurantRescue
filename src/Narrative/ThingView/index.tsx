@@ -15,8 +15,12 @@ const ThingView = ({ thing, game }: Props): JSX.Element => {
     <p className="content">
       {description(thing)}<br />
 
-      {interactions(thing).map(i =>
-        <InteractionButton label={label(i)} onClick={() => interact(game, i)} />)
+      {interactions(thing).map(i => (
+        <InteractionButton
+          key={i.kind}
+          label={label(i)}
+          onClick={() => interact(game, i)}
+        />))
       }
 
     </p>

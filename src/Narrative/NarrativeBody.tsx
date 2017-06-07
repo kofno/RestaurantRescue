@@ -29,7 +29,7 @@ const NarrativeBody = ({ game }: Props): JSX.Element => {
         <ReactMarkdown
           className="content"
           source={description(place)}
-          containerTagName="p"
+          containerTagName="div"
         />
 
         {thingsHere(game.things).map(renderThing)}
