@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { observer } from 'mobx-react';
 
 interface Props {
   narrative: JSX.Element;
@@ -34,4 +35,4 @@ const DesktopLayout = (props: Props): JSX.Element => {
   );
 };
 
-export default DesktopLayout;
+export default observer(DesktopLayout);

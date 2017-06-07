@@ -3,7 +3,7 @@ import { CSSTransitionGroup } from 'react-transition-group';
 import { observer } from 'mobx-react';
 import './ULAppear.css';
 
-const ULAppear = observer((props) => {
+const ULAppear = (props: React.Props<{}>) => {
   return (
     <CSSTransitionGroup
       component="ul"
@@ -14,6 +14,6 @@ const ULAppear = observer((props) => {
       {props.children}
     </CSSTransitionGroup >
   );
-});
+};
 
-export default ULAppear;
+export default observer(ULAppear);

@@ -8,7 +8,7 @@ interface KnownPlaceProps {
   game: Game;
 }
 
-const KnownPlaceLink = observer(({ place, game }: KnownPlaceProps) => {
+const KnownPlaceLink = ({ place, game }: KnownPlaceProps) => {
   return (
     <li key={place}>
       <a href="#" onClick={() => game.moveTo(place)}>
@@ -16,6 +16,6 @@ const KnownPlaceLink = observer(({ place, game }: KnownPlaceProps) => {
       </a>
     </li>
   );
-});
+};
 
-export default KnownPlaceLink;
+export default observer(KnownPlaceLink);

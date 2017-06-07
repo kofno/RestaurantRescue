@@ -7,9 +7,9 @@ interface Props {
   title?: string;
 }
 
-const GameTitle = observer(({ game, title }: Props): JSX.Element => {
+const GameTitle = ({ game, title }: Props): JSX.Element => {
   const text = title || 'Restaurant Rescue';
   return <div className="title is-3">{text}</div>;
-});
+};
 
-export default GameTitle;
+export default observer(GameTitle);

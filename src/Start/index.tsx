@@ -11,7 +11,7 @@ const handleStartGame = ((game: Game) => (): void => {
   game.moveTo('kitchen');
 });
 
-const Start = observer(({ game }: Props): JSX.Element => {
+const Start = ({ game }: Props): JSX.Element => {
   return (
     <div className="section">
       <div className="column is-half is-offset-one-quarter box">
@@ -39,6 +39,6 @@ const Start = observer(({ game }: Props): JSX.Element => {
       </div>
     </div>
   );
-});
+};
 
-export default Start;
+export default observer(Start);

@@ -3,7 +3,7 @@ import { CSSTransitionGroup } from 'react-transition-group';
 import { observer } from 'mobx-react';
 import './SlideUp.css';
 
-const SlideUp = observer(props => {
+const SlideUp = (props: React.Props<{}>): JSX.Element => {
   return (
     <CSSTransitionGroup
       transitionName="SlideUp"
@@ -13,6 +13,6 @@ const SlideUp = observer(props => {
       {props.children}
     </CSSTransitionGroup >
   );
-});
+};
 
-export default SlideUp;
+export default observer(SlideUp);

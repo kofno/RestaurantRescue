@@ -5,7 +5,7 @@ interface Props {
   text: string;
 };
 
-const AreaTitle = observer(({ text }: Props) =>
-  <p className="title is-5">{text}</p>);
+const AreaTitle = ({ text }: Props) =>
+  <p className="title is-5">{text}</p>;
 
-export default AreaTitle;
+export default observer(AreaTitle);

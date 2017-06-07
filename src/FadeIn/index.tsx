@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 import { CSSTransitionGroup } from 'react-transition-group';
 import './FadeIn.css';
 
-const FadeIn = observer((props) => {
+const FadeIn = (props: React.Props<{}>) => {
   return (
     <CSSTransitionGroup
       className="FadeInContainer"
@@ -15,6 +15,6 @@ const FadeIn = observer((props) => {
       {props.children}
     </CSSTransitionGroup>
   );
-});
+};
 
-export default FadeIn;
+export default observer(FadeIn);

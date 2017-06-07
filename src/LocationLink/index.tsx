@@ -11,7 +11,7 @@ interface Props {
 const handleClick = (game: Game, exit: Exit) => (): void =>
   game.moveTo(exit.place);
 
-const LocationLink = observer(({ exit, game }: Props) => {
+const LocationLink = ({ exit, game }: Props) => {
   return (
     <p className="content">
       <a href="#" onClick={handleClick(game, exit)}>
@@ -19,6 +19,6 @@ const LocationLink = observer(({ exit, game }: Props) => {
       </a>
     </p>
   );
-});
+};
 
-export default LocationLink;
+export default observer(LocationLink);

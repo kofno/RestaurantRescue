@@ -9,7 +9,7 @@ interface Props {
 
 const handleRestartGame = (game: Game) => (): void => game.resetGame();
 
-const End = observer(({ game }: Props) => {
+const End = ({ game }: Props) => {
   return (
     <div className="section">
       <div className="column is-half is-offset-one-quarter box">
@@ -38,6 +38,6 @@ const End = observer(({ game }: Props) => {
       </div>
     </div>
   );
-});
+};
 
-export default End;
+export default observer(End);
