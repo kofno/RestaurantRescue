@@ -4,6 +4,7 @@ import LocationLink from './../LocationLink';
 import AreaTitle from './../AreaTitle';
 import FadeIn from './../FadeIn';
 import ThingView from './ThingView';
+import * as ReactMarkdown from 'react-markdown';
 import { ThingLocation } from './../Thing';
 import { name, description, exits } from './../Place';
 import Game from './../Game';
@@ -24,7 +25,12 @@ const NarrativeBody = ({ game }: Props): JSX.Element => {
     <FadeIn>
       <div key={place}>
         <AreaTitle text={name(place)} />
-        <p className="content">{description(place)}</p>
+
+        <ReactMarkdown
+          className="content"
+          source={description(place)}
+          containerTagName="p"
+        />
 
         {thingsHere(game.things).map(renderThing)}
 
